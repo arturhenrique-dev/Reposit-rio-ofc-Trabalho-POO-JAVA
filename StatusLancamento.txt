@@ -1,0 +1,25 @@
+package planejamento;
+
+/**
+ * Ciclo de vida de um lançamento financeiro.
+ *
+ * PENDENTE   -> registrado, ainda não efetivado (não afeta o saldo atual).
+ * CONFIRMADO -> efetivado (afeta o saldo atual).
+ * CANCELADO  -> encerrado; não pode mais ser confirmado nem alterado (RN02).
+ */
+public enum StatusLancamento {
+
+    PENDENTE("Pendente"),
+    CONFIRMADO("Confirmado"),
+    CANCELADO("Cancelado");
+
+    private final String descricao;
+
+    StatusLancamento(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+}

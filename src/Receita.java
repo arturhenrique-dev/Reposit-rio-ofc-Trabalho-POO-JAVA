@@ -5,8 +5,8 @@ public class Receita extends LancamentoFinanceiro {
 
     public Receita(String nome, String descricao, int codigo, double valor, String origem, String frequencia) {
         super(nome, descricao, codigo, valor);
-        this.origem = origem;
-        this.frequencia = frequencia;
+        this.setOrigem(origem);
+        this.setFrequencia(frequencia);
     }
 
     @Override

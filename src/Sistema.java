@@ -1,0 +1,319 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class Sistema {
+    private static final double LIMITE_PADRAO = 4000.0;
+
+    private final List<Usuario> usuarios;
+    private Usuario usuarioLogado;
+    private final Scanner scanner;
+
+    public Sistema() {
+        this.usuarios = new ArrayList<>();
+        this.usuarioLogado = null;
+        this.scanner = new Scanner(System.in);
+    }
+
+    public void iniciar() {
+        int opcao = -1;
+
+        while (opcao != 0) {
+            System.out.println("\n=== CASHPLAN ===");
+            System.out.println("1 - Realizar login");
+            System.out.println("2 - Cadastrar usuario");
+            System.out.println("0 - Sair");
+            System.out.print("Escolha uma opcao: ");
+
+            try {
+                opcao = Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Digite apenas numeros.");
+                continue;
+            }
+
+            switch (opcao) {
+                case 1 -> {
+                    if (realizarLogin()) {
+                        exibirMenuUsuario();
+                    }
+                }
+                case 2 -> cadastrarUsuario();
+                case 0 -> System.out.println("Encerrando o sistema...");
+                default -> System.out.println("Opcao invalida.");
+            }
+        }
+
+        scanner.close();
+    }
+
+    private boolean realizarLogin() {
+        System.out.println("\n--- Login ---");
+        System.out.print("Email: ");
+        String email = scanner.nextLine().trim();
+
+        System.out.print("Senha: ");
+        String senha = scanner.nextLine();
+
+        for (Usuario u : usuarios) {
+            if (u.getEmail().equalsIgnoreCase(email) && u.autenticar(senha)) {
+                this.usuarioLogado = u;
+                System.out.println("Login realizado! Bem-vindo, " + u.getNome() + ".");
+                return true;
+            }
+        }
+
+        System.out.println("Email ou senha incorretos.");
+        return false;
+    }
+
+    private boolean cadastrarUsuario() {
+        System.out.println("\n--- Cadastro de Usuario ---");
+        System.out.print("Nome: ");
+        String nome = scanner.nextLine();
+
+        System.out.print("Email: ");
+        String email = scanner.nextLine().trim();
+
+        for (Usuario u : usuarios) {
+            if (u.getEmail().equalsIgnoreCase(email)) {
+                System.out.println("Ja existe um usuario cadastrado com esse email.");
+                return false;
+            }
+        }
+
+        System.out.print("Senha: ");
+        String senha = scanner.nextLine();
+
+        double saldoInicial;
+        try {
+            System.out.print("Saldo inicial (ex: 1000.00): ");
+            saldoInicial = Double.parseDouble(scanner.nextLine().trim().replace(",", "."));
+        } catch (NumberFormatException e) {
+            System.out.println("Saldo inicial invalido.");
+            return false;
+        }
+
+        try {
+            Usuario novoUsuario = new Usuario(nome, email, senha, LIMITE_PADRAO, saldoInicial);
+            usuarios.add(novoUsuario);
+            System.out.println("Usuario cadastrado com sucesso! Limite de orcamento: R$ " + String.format("%.2f", LIMITE_PADRAO));
+            return true;
+        } catch (IllegalArgumentException e) {
+            System.out.println("Erro no cadastro: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private void exibirMenuUsuario() {
+        int opcao = -1;
+
+        while (opcao != 0) {
+            System.out.println("\n--- Menu de " + getUsuarioLogado().getNome() + " ---");
+            System.out.println("1 - Cadastrar lancamento");
+            System.out.println("2 - Listar lancamentos (ver descricoes)");
+            System.out.println("3 - Confirmar lancamento");
+            System.out.println("4 - Cancelar lancamento");
+            System.out.println("5 - Excluir lancamento");
+            System.out.println("6 - Gerar relatorios");
+            System.out.println("0 - Logout");
+            System.out.print("Escolha uma opcao: ");
+
+            try {
+                opcao = Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Digite apenas numeros.");
+                continue;
+            }
+
+            switch (opcao) {
+                case 1 -> cadastrarLancamento();
+                case 2 -> listarLancamentos();
+                case 3 -> confirmarLancamento();
+                case 4 -> cancelarLancamento();
+                case 5 -> excluirLancamento();
+                case 6 -> gerarRelatorios();
+                case 0 -> {
+                    this.usuarioLogado = null;
+                    System.out.println("Logout realizado.");
+                }
+                default -> System.out.println("Opcao invalida.");
+            }
+        }
+    }
+
+    private void cadastrarLancamento() {
+        System.out.println("\n--- Novo Lancamento ---");
+        System.out.println("1 - Despesa");
+        System.out.println("2 - Receita");
+        System.out.print("Tipo: ");
+
+        int tipo;
+        try {
+            tipo = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Tipo invalido.");
+            return;
+        }
+
+        if (tipo != 1 && tipo != 2) {
+            System.out.println("Escolha 1 para Despesa ou 2 para Receita.");
+            return;
+        }
+
+        System.out.print("Nome: ");
+        String nome = scanner.nextLine();
+
+        System.out.print("Descricao: ");
+        String descricao = scanner.nextLine();
+
+        int codigo;
+        double valor;
+        try {
+            System.out.print("Codigo: ");
+            codigo = Integer.parseInt(scanner.nextLine().trim());
+
+            System.out.print("Valor: ");
+            valor = Double.parseDouble(scanner.nextLine().trim().replace(",", "."));
+        } catch (NumberFormatException e) {
+            System.out.println("Codigo ou valor invalido.");
+            return;
+        }
+
+        try {
+            LancamentoFinanceiro lancamento;
+            if (tipo == 1) {
+                System.out.print("Categoria: ");
+                String categoria = scanner.nextLine();
+
+                System.out.print("Taxa adicional (ex: 0 ou 15.50): ");
+                double taxa = Double.parseDouble(scanner.nextLine().trim().replace(",", "."));
+
+                lancamento = new Despesa(nome, descricao, codigo, valor, categoria, taxa);
+            } else {
+                System.out.print("Origem: ");
+                String origem = scanner.nextLine();
+
+                System.out.print("Frequencia (ex: Mensal, Diaria, Anual, Pontual): ");
+                String frequencia = scanner.nextLine();
+
+                lancamento = new Receita(nome, descricao, codigo, valor, origem, frequencia);
+            }
+
+            getUsuarioLogado().getConta().registrarLancamento(lancamento);
+            System.out.println("Lancamento registrado com sucesso!");
+        } catch (NumberFormatException e) {
+            System.out.println("Taxa adicional invalida.");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            System.out.println("Nao foi possivel registrar o lancamento: " + e.getMessage());
+        }
+    }
+
+    private void listarLancamentos() {
+        System.out.println("\n--- Lancamentos Cadastrados ---");
+        List<LancamentoFinanceiro> lista = getUsuarioLogado().getConta().getLancamentos();
+
+        if (lista.isEmpty()) {
+            System.out.println("Nenhum lancamento cadastrado.");
+            return;
+        }
+
+        for (LancamentoFinanceiro l : lista) {
+            String tipo = (l instanceof Despesa) ? "DESPESA" : "RECEITA";
+            System.out.println(
+                    "Codigo: " + l.getCodigo() +
+                            " | Tipo: " + tipo +
+                            " | Nome: " + l.getNome() +
+                            " | Descricao: " + l.getDescricao() +
+                            " | Valor base: R$ " + String.format("%.2f", l.getValor()) +
+                            " | Status: " + l.getStatus()
+            );
+        }
+    }
+
+    private void confirmarLancamento() {
+        System.out.println("\n--- Confirmar Lancamento ---");
+        int codigo = lerCodigo();
+        if (codigo == -1) {
+            return;
+        }
+
+        LancamentoFinanceiro encontrado = buscarLancamentoPorCodigo(codigo);
+        if (encontrado == null) {
+            System.out.println("Lancamento com codigo " + codigo + " nao encontrado.");
+            return;
+        }
+
+        try {
+            encontrado.confirmar();
+            System.out.println("Lancamento confirmado com sucesso!");
+        } catch (IllegalStateException e) {
+            System.out.println("Nao foi possivel confirmar: " + e.getMessage());
+        }
+    }
+
+    private void cancelarLancamento() {
+        System.out.println("\n--- Cancelar Lancamento ---");
+        int codigo = lerCodigo();
+        if (codigo == -1) {
+            return;
+        }
+
+        try {
+            getUsuarioLogado().getConta().cancelarLancamento(codigo);
+            System.out.println("Lancamento cancelado com sucesso!");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            System.out.println("Nao foi possivel cancelar: " + e.getMessage());
+        }
+    }
+
+    private void excluirLancamento() {
+        System.out.println("\n--- Excluir Lancamento ---");
+        int codigo = lerCodigo();
+        if (codigo == -1) {
+            return;
+        }
+
+        try {
+            getUsuarioLogado().getConta().excluirLancamento(codigo);
+            System.out.println("Lancamento excluido com sucesso!");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            System.out.println("Nao foi possivel excluir: " + e.getMessage());
+        }
+    }
+
+    private int lerCodigo() {
+        System.out.print("Informe o codigo do lancamento: ");
+        try {
+            int codigo = Integer.parseInt(scanner.nextLine().trim());
+            if (codigo <= 0) {
+                System.out.println("Digite um codigo maior que zero.");
+                return -1;
+            }
+            return codigo;
+        } catch (NumberFormatException e) {
+            System.out.println("Codigo invalido.");
+            return -1;
+        }
+    }
+
+    private LancamentoFinanceiro buscarLancamentoPorCodigo(int codigo) {
+        for (LancamentoFinanceiro l : getUsuarioLogado().getConta().getLancamentos()) {
+            if (l.getCodigo() == codigo) {
+                return l;
+            }
+        }
+        return null;
+    }
+
+    private void gerarRelatorios() {
+        RelatorioFinanceiro relatorio = new RelatorioFinanceiro(getUsuarioLogado().getConta());
+        relatorio.exibirResumoPorStatus();
+        relatorio.exibirGastosPorDiaSemana();
+        relatorio.exibirBalancoGeral();
+    }
+
+    public Usuario getUsuarioLogado() {
+        return usuarioLogado;
+    }
+}

@@ -1,5 +1,4 @@
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public abstract class LancamentoFinanceiro {
 
@@ -51,7 +50,7 @@ public abstract class LancamentoFinanceiro {
     }
 
     private void setCodigo(int codigo) {
-        if (codigo < 0) {
+        if (codigo <= 0) {
             throw new IllegalArgumentException("O código do lançamento deve ser maior que zero.");
         }
         this.codigo = codigo;
@@ -61,7 +60,7 @@ public abstract class LancamentoFinanceiro {
         return nome;
     }
 
-    private void setNome(String nome) {
+    protected void setNome(String nome) {
         if (nome == null || nome.trim().isEmpty()) {
             throw new IllegalArgumentException("O nome do lançamento é obrigatória.");
         }
@@ -72,7 +71,7 @@ public abstract class LancamentoFinanceiro {
         return descricao;
     }
 
-    private void setDescricao(String descricao) {
+    protected void setDescricao(String descricao) {
         if (descricao == null || descricao.trim().isEmpty()) {
             throw new IllegalArgumentException("A descrição do lançamento é obrigatória.");
         }
@@ -83,7 +82,7 @@ public abstract class LancamentoFinanceiro {
         return valor;
     }
 
-    private void setValor(double valor) {
+    protected void setValor(double valor) {
         if (valor <= 0) {
             throw new IllegalArgumentException("O valor do lançamento deve ser maior que zero.");
         }

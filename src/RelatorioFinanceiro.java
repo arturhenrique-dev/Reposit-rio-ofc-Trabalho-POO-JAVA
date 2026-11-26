@@ -9,7 +9,7 @@ import java.util.Map;
  */
 public class RelatorioFinanceiro {
 
-    private static final NumberFormat MOEDA = NumberFormat.getCurrencyInstance(Locale.of("pt", "BR"));
+    private static final NumberFormat MOEDA = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
 
     private final ContaPlanejamento conta;
 
@@ -62,6 +62,71 @@ public class RelatorioFinanceiro {
         for (DiaSemana d : DiaSemana.values()) {
             System.out.printf("%-15s | %s%n", d.getDescricao(), MOEDA.format(gastos.get(d)));
         }
+    }
+
+    /** Resumo financeiro referente a um mês e ano específicos. */
+    public void exibirResumoMensal(int mes, int ano) {
+        if (mes < 1 || mes > 12) {
+            throw new IllegalArgumentException("O mês deve estar entre 1 e 12.");
+        }
+        if (ano <= 0) {
+            throw new IllegalArgumentException("O ano deve ser maior que zero.");
+        }
+
+        double receitasConfirmadas = 0;
+        double despesasConfirmadas = 0;
+
+        for (LancamentoFinanceiro l : getConta().getLancamentos()) {
+            if (l.getStatus() == StatusLancamento.CONFIRMADO
+                    && l.getMes() == mes
+                    && l.getAno() == ano) {
+                double impacto = l.calcularImpactoNoSaldo();
+                if (l instanceof Receita) {
+                    receitasConfirmadas += impacto;
+                } else if (l instanceof Despesa) {
+                    despesasConfirmadas += Math.abs(impacto);
+                }
+            }
+        }
+
+        double despesasAtivasMes = getConta().calcularTotalDespesasPorMes(mes, ano);
+        double saldoLiquidoMes = getConta().calcularSaldoPorMes(mes, ano);
+
+        System.out.printf("%n===== RESUMO MENSAL (%02d/%d) =====%n", mes, ano);
+        System.out.printf("Receitas confirmadas.......: %s%n", MOEDA.format(receitasConfirmadas));
+        System.out.printf("Despesas confirmadas.......: %s%n", MOEDA.format(despesasConfirmadas));
+        System.out.printf("Despesas ativas (c/ pend.).: %s%n", MOEDA.format(despesasAtivasMes));
+        System.out.printf("Resultado líquido (confirm.): %s%n", MOEDA.format(saldoLiquidoMes));
+    }
+
+    /** Resumo financeiro referente a um ano específico. */
+    public void exibirResumoAnual(int ano) {
+        if (ano <= 0) {
+            throw new IllegalArgumentException("O ano deve ser maior que zero.");
+        }
+
+        double receitasConfirmadas = 0;
+        double despesasConfirmadas = 0;
+
+        for (LancamentoFinanceiro l : getConta().getLancamentos()) {
+            if (l.getStatus() == StatusLancamento.CONFIRMADO && l.getAno() == ano) {
+                double impacto = l.calcularImpactoNoSaldo();
+                if (l instanceof Receita) {
+                    receitasConfirmadas += impacto;
+                } else if (l instanceof Despesa) {
+                    despesasConfirmadas += Math.abs(impacto);
+                }
+            }
+        }
+
+        double despesasAtivasAno = getConta().calcularTotalDespesasPorAno(ano);
+        double saldoLiquidoAno = getConta().calcularSaldoPorAno(ano);
+
+        System.out.printf("%n===== RESUMO ANUAL (%d) =====%n", ano);
+        System.out.printf("Receitas confirmadas.......: %s%n", MOEDA.format(receitasConfirmadas));
+        System.out.printf("Despesas confirmadas.......: %s%n", MOEDA.format(despesasConfirmadas));
+        System.out.printf("Despesas ativas (c/ pend.).: %s%n", MOEDA.format(despesasAtivasAno));
+        System.out.printf("Resultado líquido (confirm.): %s%n", MOEDA.format(saldoLiquidoAno));
     }
 
     /** Visão geral: saldo, receitas, despesas e uso do limite de orçamento. */

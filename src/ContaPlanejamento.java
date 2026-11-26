@@ -172,6 +172,75 @@ public class ContaPlanejamento {
         return saldo;
     }
 
+    /** Soma das despesas ativas (não canceladas) de um mês e ano específicos. */
+    public double calcularTotalDespesasPorMes(int mes, int ano) {
+        validarMesAno(mes, ano);
+        double total = 0;
+        for (LancamentoFinanceiro l : getLancamentos()) {
+            if (l instanceof Despesa d
+                    && d.getStatus() != StatusLancamento.CANCELADO
+                    && d.getMes() == mes
+                    && d.getAno() == ano) {
+                total += custoDe(d);
+            }
+        }
+        return total;
+    }
+
+    /** Soma das despesas ativas (não canceladas) de um ano específico. */
+    public double calcularTotalDespesasPorAno(int ano) {
+        this.validarAno(ano);
+        double total = 0;
+        for (LancamentoFinanceiro l : this.getLancamentos()) {
+            if (l instanceof Despesa d
+                    && d.getStatus() != StatusLancamento.CANCELADO
+                    && d.getAno() == ano) {
+                total += custoDe(d);
+            }
+        }
+        return total;
+    }
+
+    /** Impacto líquido (receitas - despesas) dos lançamentos CONFIRMADOS em um mês/ano. */
+    public double calcularSaldoPorMes(int mes, int ano) {
+        this.validarMesAno(mes, ano);
+        double saldo = 0;
+        for (LancamentoFinanceiro l : this.getLancamentos()) {
+            if (l.getStatus() == StatusLancamento.CONFIRMADO
+                    && l.getMes() == mes
+                    && l.getAno() == ano) {
+                saldo += l.calcularImpactoNoSaldo();
+            }
+        }
+        return saldo;
+    }
+
+    /** Impacto líquido (receitas - despesas) dos lançamentos CONFIRMADOS em um ano. */
+    public double calcularSaldoPorAno(int ano) {
+        this.validarAno(ano);
+        double saldo = 0;
+        for (LancamentoFinanceiro l : this.getLancamentos()) {
+            if (l.getStatus() == StatusLancamento.CONFIRMADO
+                    && l.getAno() == ano) {
+                saldo += l.calcularImpactoNoSaldo();
+            }
+        }
+        return saldo;
+    }
+
+    private void validarMesAno(int mes, int ano) {
+        if (mes < 1 || mes > 12) {
+            throw new IllegalArgumentException("O mês deve estar entre 1 e 12.");
+        }
+        validarAno(ano);
+    }
+
+    private void validarAno(int ano) {
+        if (ano <= 0) {
+            throw new IllegalArgumentException("O ano deve ser maior que zero.");
+        }
+    }
+
     // ------------------------------------------------------------------
     // Getters e auxiliares internos
     // ------------------------------------------------------------------

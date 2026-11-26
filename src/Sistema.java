@@ -10,9 +10,17 @@ public class Sistema {
     private final Scanner scanner;
 
     public Sistema() {
-        this.usuarios = new ArrayList<>();
         this.usuarioLogado = null;
         this.scanner = new Scanner(System.in);
+        this.usuarios = new ArrayList<>();
+
+        this.usuarios.add(new Administrador(
+                "Administrador",
+                "admin@cashplan.com",
+                "admin123",
+                100000.0,
+                10000.0,
+                "ADM01"));
     }
 
     public void iniciar() {
@@ -26,7 +34,7 @@ public class Sistema {
             System.out.print("Escolha uma opcao: ");
 
             try {
-                opcao = Integer.parseInt(scanner.nextLine().trim());
+                opcao = Integer.parseInt(this.getScanner().nextLine().trim());
             } catch (NumberFormatException e) {
                 System.out.println("Digite apenas numeros.");
                 continue;
@@ -44,21 +52,30 @@ public class Sistema {
             }
         }
 
-        scanner.close();
+        this.getScanner().close();
     }
 
     private boolean realizarLogin() {
         System.out.println("\n--- Login ---");
         System.out.print("Email: ");
-        String email = scanner.nextLine().trim();
+        String email = this.getScanner().nextLine().trim();
 
         System.out.print("Senha: ");
-        String senha = scanner.nextLine();
+        String senha = this.getScanner().nextLine();
 
-        for (Usuario u : usuarios) {
+        for (Usuario u : this.getUsuarios()) {
             if (u.getEmail().equalsIgnoreCase(email) && u.autenticar(senha)) {
+                if (u instanceof Administrador admin) {
+                    System.out.print("Codigo de acesso: ");
+                    String codigo = this.getScanner().nextLine().trim();
+                    if (!admin.getCodigoAcesso().equals(codigo)) {
+                        System.out.println("Codigo de acesso invalido.");
+                        return false;
+                    }
+                }
+
                 this.usuarioLogado = u;
-                System.out.println("Login realizado! Bem-vindo, " + u.getNome() + ".");
+                System.out.println("Login realizado! Bem-vindo, " + getUsuarioLogado().getNome() + ".");
                 return true;
             }
         }
@@ -70,12 +87,12 @@ public class Sistema {
     private boolean cadastrarUsuario() {
         System.out.println("\n--- Cadastro de Usuario ---");
         System.out.print("Nome: ");
-        String nome = scanner.nextLine();
+        String nome = this.getScanner().nextLine();
 
         System.out.print("Email: ");
-        String email = scanner.nextLine().trim();
+        String email = this.getScanner().nextLine().trim();
 
-        for (Usuario u : usuarios) {
+        for (Usuario u : this.getUsuarios()) {
             if (u.getEmail().equalsIgnoreCase(email)) {
                 System.out.println("Ja existe um usuario cadastrado com esse email.");
                 return false;
@@ -83,12 +100,12 @@ public class Sistema {
         }
 
         System.out.print("Senha: ");
-        String senha = scanner.nextLine();
+        String senha = this.getScanner().nextLine();
 
         double saldoInicial;
         try {
             System.out.print("Saldo inicial (ex: 1000.00): ");
-            saldoInicial = Double.parseDouble(scanner.nextLine().trim().replace(",", "."));
+            saldoInicial = Double.parseDouble(this.getScanner().nextLine().trim().replace(",", "."));
         } catch (NumberFormatException e) {
             System.out.println("Saldo inicial invalido.");
             return false;
@@ -96,7 +113,7 @@ public class Sistema {
 
         try {
             Usuario novoUsuario = new Usuario(nome, email, senha, LIMITE_PADRAO, saldoInicial);
-            usuarios.add(novoUsuario);
+            this.getUsuarios().add(novoUsuario);
             System.out.println("Usuario cadastrado com sucesso! Limite de orcamento: R$ " + String.format("%.2f", LIMITE_PADRAO));
             return true;
         } catch (IllegalArgumentException e) {
@@ -107,6 +124,7 @@ public class Sistema {
 
     private void exibirMenuUsuario() {
         int opcao = -1;
+        boolean isAdmin = getUsuarioLogado() instanceof Administrador;
 
         while (opcao != 0) {
             System.out.println("\n--- Menu de " + getUsuarioLogado().getNome() + " ---");
@@ -116,11 +134,15 @@ public class Sistema {
             System.out.println("4 - Cancelar lancamento");
             System.out.println("5 - Excluir lancamento");
             System.out.println("6 - Gerar relatorios");
+            if (isAdmin) {
+                System.out.println("7 - Listar usuarios cadastrados");
+                System.out.println("8 - Excluir usuario");
+            }
             System.out.println("0 - Logout");
             System.out.print("Escolha uma opcao: ");
 
             try {
-                opcao = Integer.parseInt(scanner.nextLine().trim());
+                opcao = Integer.parseInt(this.getScanner().nextLine().trim());
             } catch (NumberFormatException e) {
                 System.out.println("Digite apenas numeros.");
                 continue;
@@ -133,6 +155,20 @@ public class Sistema {
                 case 4 -> cancelarLancamento();
                 case 5 -> excluirLancamento();
                 case 6 -> gerarRelatorios();
+                case 7 -> {
+                    if (isAdmin) {
+                        listarUsuariosCadastrados();
+                    } else {
+                        System.out.println("Opcao invalida.");
+                    }
+                }
+                case 8 -> {
+                    if (isAdmin) {
+                        excluirUsuario();
+                    } else {
+                        System.out.println("Opcao invalida.");
+                    }
+                }
                 case 0 -> {
                     this.usuarioLogado = null;
                     System.out.println("Logout realizado.");
@@ -140,6 +176,56 @@ public class Sistema {
                 default -> System.out.println("Opcao invalida.");
             }
         }
+    }
+
+    private void listarUsuariosCadastrados() {
+        if (!(getUsuarioLogado() instanceof Administrador)) {
+            System.out.println("Acesso restrito a administradores.");
+            return;
+        }
+
+        System.out.println("\n--- Usuarios Cadastrados ---");
+        for (Usuario u : this.getUsuarios()) {
+            String tipo = (u instanceof Administrador) ? "Administrador" : "Usuario";
+            System.out.println("Nome: " + u.getNome() + " | Email: " + u.getEmail() + " | Tipo: " + tipo);
+        }
+    }
+
+    private void excluirUsuario() {
+        if (!(getUsuarioLogado() instanceof Administrador)) {
+            System.out.println("Acesso restrito a administradores.");
+            return;
+        }
+
+        System.out.println("\n--- Excluir Usuario ---");
+        System.out.print("Informe o email do usuario a excluir: ");
+        String emailAlvo = this.getScanner().nextLine().trim();
+
+        if (emailAlvo.isEmpty()) {
+            System.out.println("Email invalido.");
+            return;
+        }
+
+        if (getUsuarioLogado().getEmail().equalsIgnoreCase(emailAlvo)) {
+            System.out.println("Nao e possivel excluir o administrador atualmente logado.");
+            return;
+        }
+
+        Usuario alvo = null;
+        for (Usuario u : this.getUsuarios()) {
+            if (u.getEmail().equalsIgnoreCase(emailAlvo)) {
+                alvo = u;
+                break;
+            }
+        }
+
+        if (alvo == null) {
+            System.out.println("Usuario nao encontrado.");
+            return;
+        }
+
+        this.getUsuarios().remove(alvo);
+        System.out.println("Usuario '" + alvo.getNome() + "' excluido com sucesso!");
     }
 
     private void cadastrarLancamento() {
@@ -150,7 +236,7 @@ public class Sistema {
 
         int tipo;
         try {
-            tipo = Integer.parseInt(scanner.nextLine().trim());
+            tipo = Integer.parseInt(this.getScanner().nextLine().trim());
         } catch (NumberFormatException e) {
             System.out.println("Tipo invalido.");
             return;
@@ -162,19 +248,19 @@ public class Sistema {
         }
 
         System.out.print("Nome: ");
-        String nome = scanner.nextLine();
+        String nome = this.getScanner().nextLine();
 
         System.out.print("Descricao: ");
-        String descricao = scanner.nextLine();
+        String descricao = this.getScanner().nextLine();
 
         int codigo;
         double valor;
         try {
             System.out.print("Codigo: ");
-            codigo = Integer.parseInt(scanner.nextLine().trim());
+            codigo = Integer.parseInt(this.getScanner().nextLine().trim());
 
             System.out.print("Valor: ");
-            valor = Double.parseDouble(scanner.nextLine().trim().replace(",", "."));
+            valor = Double.parseDouble(this.getScanner().nextLine().trim().replace(",", "."));
         } catch (NumberFormatException e) {
             System.out.println("Codigo ou valor invalido.");
             return;
@@ -184,18 +270,18 @@ public class Sistema {
             LancamentoFinanceiro lancamento;
             if (tipo == 1) {
                 System.out.print("Categoria: ");
-                String categoria = scanner.nextLine();
+                String categoria = this.getScanner().nextLine();
 
                 System.out.print("Taxa adicional (ex: 0 ou 15.50): ");
-                double taxa = Double.parseDouble(scanner.nextLine().trim().replace(",", "."));
+                double taxa = Double.parseDouble(this.getScanner().nextLine().trim().replace(",", "."));
 
                 lancamento = new Despesa(nome, descricao, codigo, valor, categoria, taxa);
             } else {
                 System.out.print("Origem: ");
-                String origem = scanner.nextLine();
+                String origem = this.getScanner().nextLine();
 
                 System.out.print("Frequencia (ex: Mensal, Diaria, Anual, Pontual): ");
-                String frequencia = scanner.nextLine();
+                String frequencia = this.getScanner().nextLine();
 
                 lancamento = new Receita(nome, descricao, codigo, valor, origem, frequencia);
             }
@@ -285,7 +371,7 @@ public class Sistema {
     private int lerCodigo() {
         System.out.print("Informe o codigo do lancamento: ");
         try {
-            int codigo = Integer.parseInt(scanner.nextLine().trim());
+            int codigo = Integer.parseInt(this.getScanner().nextLine().trim());
             if (codigo <= 0) {
                 System.out.println("Digite um codigo maior que zero.");
                 return -1;
@@ -308,12 +394,58 @@ public class Sistema {
 
     private void gerarRelatorios() {
         RelatorioFinanceiro relatorio = new RelatorioFinanceiro(getUsuarioLogado().getConta());
-        relatorio.exibirResumoPorStatus();
-        relatorio.exibirGastosPorDiaSemana();
-        relatorio.exibirBalancoGeral();
+
+        System.out.println("\n--- Tipo de Relatorio ---");
+        System.out.println("1 - Relatorio completo (status, dia da semana e balanco geral)");
+        System.out.println("2 - Relatorio mensal");
+        System.out.println("3 - Relatorio anual");
+        System.out.print("Escolha uma opcao: ");
+
+        int escolha;
+        try {
+            escolha = Integer.parseInt(this.getScanner().nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Opcao invalida.");
+            return;
+        }
+
+        try {
+            switch (escolha) {
+                case 1 -> {
+                    relatorio.exibirResumoPorStatus();
+                    relatorio.exibirGastosPorDiaSemana();
+                    relatorio.exibirBalancoGeral();
+                }
+                case 2 -> {
+                    System.out.print("Informe o mes (1 a 12): ");
+                    int mes = Integer.parseInt(this.getScanner().nextLine().trim());
+                    System.out.print("Informe o ano (ex: 2026): ");
+                    int ano = Integer.parseInt(this.getScanner().nextLine().trim());
+                    relatorio.exibirResumoMensal(mes, ano);
+                }
+                case 3 -> {
+                    System.out.print("Informe o ano (ex: 2026): ");
+                    int ano = Integer.parseInt(this.getScanner().nextLine().trim());
+                    relatorio.exibirResumoAnual(ano);
+                }
+                default -> System.out.println("Opcao invalida.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Digite apenas numeros validos para mes e ano.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Erro no relatorio: " + e.getMessage());
+        }
     }
 
     public Usuario getUsuarioLogado() {
         return usuarioLogado;
+    }
+
+    public List<Usuario> getUsuarios() {
+        return usuarios;
+    }
+
+    public Scanner getScanner() {
+        return scanner;
     }
 }

@@ -9,14 +9,18 @@ public abstract class LancamentoFinanceiro {
     protected LocalDate data;
     protected DiaSemana diaSemana;
     protected StatusLancamento status;
-    
+
     public LancamentoFinanceiro(String nome, String descricao, int codigo, double valor) {
+        this(nome, descricao, codigo, valor, LocalDate.now());
+    }
+
+    public LancamentoFinanceiro(String nome, String descricao, int codigo, double valor, LocalDate data) {
         this.setNome(nome);
         this.setDescricao(descricao);
         this.setCodigo(codigo);
         this.setValor(valor);
-        this.data = LocalDate.now();
-        this.diaSemana = DiaSemana.converterData(this.data);
+        this.setData(data);
+        this.diaSemana = DiaSemana.converterData(this.getData());
         this.status = StatusLancamento.PENDENTE;
     }
 
@@ -93,11 +97,26 @@ public abstract class LancamentoFinanceiro {
         return data;
     }
 
+    private void setData(LocalDate data) {
+        if (data == null) {
+            throw new IllegalArgumentException("A data do lançamento não pode ser nula.");
+        }
+        this.data = data;
+    }
+
     public DiaSemana getDiaSemana() {
         return diaSemana;
     }
 
     public StatusLancamento getStatus() {
         return status;
+    }
+
+    public int getMes() {
+        return getData().getMonthValue();
+    }
+
+    public int getAno() {
+        return getData().getYear();
     }
 }

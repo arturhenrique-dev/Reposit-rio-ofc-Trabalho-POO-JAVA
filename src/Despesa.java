@@ -25,7 +25,7 @@ public class Despesa extends LancamentoFinanceiro {
         } else if (this.getStatus() == StatusLancamento.CANCELADO) {
             throw new IllegalStateException("Não é possível aplicar taxa, pois a despesa está CANCELADA.");
         }
-        this.taxaAdicional = taxa;
+        this.setTaxaAdicional(taxa);
     }
 
     @Override

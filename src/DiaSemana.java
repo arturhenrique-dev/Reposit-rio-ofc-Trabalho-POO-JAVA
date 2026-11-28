@@ -35,7 +35,8 @@ public enum DiaSemana {
         return switch (diaAtual) {
             case MONDAY -> SEGUNDA;
             case TUESDAY -> TERCA;
-            case THURSDAY -> QUARTA;
+            case WEDNESDAY -> QUARTA;
+            case THURSDAY -> QUINTA;
             case FRIDAY -> SEXTA;
             case SATURDAY -> SABADO;
             case SUNDAY -> DOMINGO;

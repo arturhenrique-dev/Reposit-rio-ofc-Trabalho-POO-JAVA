@@ -1,23 +1,26 @@
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public abstract class LancamentoFinanceiro {
 
-    protected String nome;
-    protected String descricao;
-    protected int codigo;
-    protected double valor;
-    protected LocalDate data;
-    protected DiaSemana diaSemana;
-    protected StatusLancamento status;
-    
+    private String nome;
+    private String descricao;
+    private int codigo;
+    private double valor;
+    private LocalDate data;
+    private DiaSemana diaSemana;
+    private StatusLancamento status;
+
     public LancamentoFinanceiro(String nome, String descricao, int codigo, double valor) {
+        this(nome, descricao, codigo, valor, LocalDate.now());
+    }
+
+    public LancamentoFinanceiro(String nome, String descricao, int codigo, double valor, LocalDate data) {
         this.setNome(nome);
         this.setDescricao(descricao);
         this.setCodigo(codigo);
         this.setValor(valor);
-        this.data = LocalDate.now();
-        this.diaSemana = DiaSemana.converterData(this.data);
+        this.setData(data);
+        this.diaSemana = DiaSemana.converterData(this.getData());
         this.status = StatusLancamento.PENDENTE;
     }
 
@@ -51,7 +54,7 @@ public abstract class LancamentoFinanceiro {
     }
 
     private void setCodigo(int codigo) {
-        if (codigo < 0) {
+        if (codigo <= 0) {
             throw new IllegalArgumentException("O código do lançamento deve ser maior que zero.");
         }
         this.codigo = codigo;
@@ -61,7 +64,7 @@ public abstract class LancamentoFinanceiro {
         return nome;
     }
 
-    private void setNome(String nome) {
+    protected void setNome(String nome) {
         if (nome == null || nome.trim().isEmpty()) {
             throw new IllegalArgumentException("O nome do lançamento é obrigatória.");
         }
@@ -72,7 +75,7 @@ public abstract class LancamentoFinanceiro {
         return descricao;
     }
 
-    private void setDescricao(String descricao) {
+    protected void setDescricao(String descricao) {
         if (descricao == null || descricao.trim().isEmpty()) {
             throw new IllegalArgumentException("A descrição do lançamento é obrigatória.");
         }
@@ -83,7 +86,7 @@ public abstract class LancamentoFinanceiro {
         return valor;
     }
 
-    private void setValor(double valor) {
+    protected void setValor(double valor) {
         if (valor <= 0) {
             throw new IllegalArgumentException("O valor do lançamento deve ser maior que zero.");
         }
@@ -94,11 +97,26 @@ public abstract class LancamentoFinanceiro {
         return data;
     }
 
+    private void setData(LocalDate data) {
+        if (data == null) {
+            throw new IllegalArgumentException("A data do lançamento não pode ser nula.");
+        }
+        this.data = data;
+    }
+
     public DiaSemana getDiaSemana() {
         return diaSemana;
     }
 
     public StatusLancamento getStatus() {
         return status;
+    }
+
+    public int getMes() {
+        return getData().getMonthValue();
+    }
+
+    public int getAno() {
+        return getData().getYear();
     }
 }

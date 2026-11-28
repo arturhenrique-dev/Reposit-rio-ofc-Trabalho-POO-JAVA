@@ -2,13 +2,13 @@ import java.time.LocalDate;
 
 public abstract class LancamentoFinanceiro {
 
-    protected String nome;
-    protected String descricao;
-    protected int codigo;
-    protected double valor;
-    protected LocalDate data;
-    protected DiaSemana diaSemana;
-    protected StatusLancamento status;
+    private String nome;
+    private String descricao;
+    private int codigo;
+    private double valor;
+    private LocalDate data;
+    private DiaSemana diaSemana;
+    private StatusLancamento status;
 
     public LancamentoFinanceiro(String nome, String descricao, int codigo, double valor) {
         this(nome, descricao, codigo, valor, LocalDate.now());

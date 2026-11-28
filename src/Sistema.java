@@ -123,8 +123,15 @@ public class Sistema {
     }
 
     private void exibirMenuUsuario() {
+        if (getUsuarioLogado() instanceof Administrador) {
+            exibirMenuAdministrador();
+        } else {
+            exibirMenuUsuarioComum();
+        }
+    }
+
+    private void exibirMenuUsuarioComum() {
         int opcao = -1;
-        boolean isAdmin = getUsuarioLogado() instanceof Administrador;
 
         while (opcao != 0) {
             System.out.println("\n--- Menu de " + getUsuarioLogado().getNome() + " ---");
@@ -134,10 +141,6 @@ public class Sistema {
             System.out.println("4 - Cancelar lancamento");
             System.out.println("5 - Excluir lancamento");
             System.out.println("6 - Gerar relatorios");
-            if (isAdmin) {
-                System.out.println("7 - Listar usuarios cadastrados");
-                System.out.println("8 - Excluir usuario");
-            }
             System.out.println("0 - Logout");
             System.out.print("Escolha uma opcao: ");
 
@@ -155,20 +158,47 @@ public class Sistema {
                 case 4 -> cancelarLancamento();
                 case 5 -> excluirLancamento();
                 case 6 -> gerarRelatorios();
-                case 7 -> {
-                    if (isAdmin) {
-                        listarUsuariosCadastrados();
-                    } else {
-                        System.out.println("Opcao invalida.");
-                    }
+                case 0 -> {
+                    this.usuarioLogado = null;
+                    System.out.println("Logout realizado.");
                 }
-                case 8 -> {
-                    if (isAdmin) {
-                        excluirUsuario();
-                    } else {
-                        System.out.println("Opcao invalida.");
-                    }
-                }
+                default -> System.out.println("Opcao invalida.");
+            }
+        }
+    }
+
+    private void exibirMenuAdministrador() {
+        int opcao = -1;
+
+        while (opcao != 0) {
+            System.out.println("\n--- Menu Administrativo (" + getUsuarioLogado().getNome() + ") ---");
+            System.out.println("1 - Cadastrar lancamento");
+            System.out.println("2 - Listar lancamentos (ver descricoes)");
+            System.out.println("3 - Confirmar lancamento");
+            System.out.println("4 - Cancelar lancamento");
+            System.out.println("5 - Excluir lancamento");
+            System.out.println("6 - Gerar relatorios");
+            System.out.println("7 - Listar usuarios cadastrados");
+            System.out.println("8 - Excluir usuario");
+            System.out.println("0 - Logout");
+            System.out.print("Escolha uma opcao: ");
+
+            try {
+                opcao = Integer.parseInt(this.getScanner().nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Digite apenas numeros.");
+                continue;
+            }
+
+            switch (opcao) {
+                case 1 -> cadastrarLancamento();
+                case 2 -> listarLancamentos();
+                case 3 -> confirmarLancamento();
+                case 4 -> cancelarLancamento();
+                case 5 -> excluirLancamento();
+                case 6 -> gerarRelatorios();
+                case 7 -> listarUsuariosCadastrados();
+                case 8 -> excluirUsuario();
                 case 0 -> {
                     this.usuarioLogado = null;
                     System.out.println("Logout realizado.");
@@ -442,10 +472,10 @@ public class Sistema {
     }
 
     public List<Usuario> getUsuarios() {
-        return usuarios;
+        return java.util.Collections.unmodifiableList(usuarios);
     }
 
-    public Scanner getScanner() {
+    private Scanner getScanner() {
         return scanner;
     }
 }
